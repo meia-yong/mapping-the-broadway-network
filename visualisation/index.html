@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Mapping the Broadway Network</title>
+
+    <style>
+        html,
+        body {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        #controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 10;
+
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        #sigma-container {
+            width: 100%;
+            height: 100vh;
+        }
+    </style>
+
+</head>
+
+
+<body>
+
+    <div id="controls">
+
+        <input
+            id="search"
+            type="text"
+            placeholder="Search performer..."
+        >
+
+        <button id="searchButton">
+            Search
+        </button>
+
+
+        <button id="clearButton">
+            Clear
+        </button>
+
+
+        <label>
+
+            <input
+                id="collaboratorToggle"
+                type="checkbox"
+            >
+
+            Show collaborators only
+
+        </label>
+
+
+    </div>
+
+
+    <div id="sigma-container"></div>
+
+
+    <script type="module" src="/src/main.js"></script>
+
+</body>
+
+</html>
