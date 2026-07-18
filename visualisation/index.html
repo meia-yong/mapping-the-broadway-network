@@ -1,78 +1,45 @@
-<!DOCTYPE html>
-<html>
-
 <head>
-    <title>Mapping the Broadway Network</title>
-
-    <style>
-        html,
-        body {
-            margin: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-        }
-
-        #controls {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            z-index: 10;
-
-            background: white;
-            padding: 10px;
-            border-radius: 8px;
-        }
-
-        #sigma-container {
-            width: 100%;
-            height: 100vh;
-        }
-    </style>
-
+    <link rel="stylesheet" href="/src/home.css">
 </head>
-
 
 <body>
 
-    <div id="controls">
+<div id="landing">
 
-        <input
-            id="search"
-            type="text"
-            placeholder="Search performer..."
-        >
+    <h1>
+        Mapping the Broadway Network
+    </h1>
 
-        <button id="searchButton">
-            Search
-        </button>
+    <p class="subtitle">
+        An interactive exploration of nearly a century of Broadway collaboration.
+    </p>
 
+    <div id="stats">
 
-        <button id="clearButton">
-            Clear
-        </button>
+        <div class="stat">
+            <h2>55,173</h2>
+            <p>Performers</p>
+        </div>
 
+        <div class="stat">
+            <h2>7,292</h2>
+            <p>Productions</p>
+        </div>
 
-        <label>
-
-            <input
-                id="collaboratorToggle"
-                type="checkbox"
-            >
-
-            Show collaborators only
-
-        </label>
-
+        <div class="stat">
+            <h2>1,565,292</h2>
+            <p>Connections</p>
+        </div>
 
     </div>
 
+    <a
+        class="explore-button"
+        href="explore.html"
+    >
+        Explore the Network!
+    </a>
 
-    <div id="sigma-container"></div>
-
-
-    <script type="module" src="/src/main.js"></script>
+</div>
 
 </body>
-
-</html>

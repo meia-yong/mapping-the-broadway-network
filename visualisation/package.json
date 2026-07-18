@@ -4,14 +4,17 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "vite"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "dependencies": {
     "@sigma/node-border": "^3.0.0",
+    "fuse.js": "^7.5.0",
     "graphology": "^0.26.0",
     "graphology-layout-forceatlas2": "^0.10.1",
     "papaparse": "^5.5.4",

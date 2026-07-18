@@ -1,13 +1,20 @@
 import Graph from "graphology";
 import Sigma from "sigma";
 import Papa from "papaparse";
+import Fuse from "fuse.js"
 
 
 const graph = new Graph();
 
 
-const DATA_FILE = "/data/drl_linear_1_15.csv";
-const EDGE_FILE = "/data/performer_edges_clean.csv";
+const DATA_FILE =
+    `${import.meta.env.BASE_URL}data/drl_linear_1_15.csv`;
+
+const EDGE_FILE =
+    `${import.meta.env.BASE_URL}data/performer_edges_clean.csv`;
+
+const METADATA_FILE =
+    `${import.meta.env.BASE_URL}data/performer_metadata.csv`;
 
 
 let selectedNode = null;
@@ -18,13 +25,13 @@ let highlightedEdges = new Set();
 
 let collaboratorsOnly = false;
 
+let performerMetadata = {};
 
 
 Papa.parse(DATA_FILE, {
 
     download: true,
     header: true,
-
 
     complete: (nodeResults) => {
 
@@ -35,52 +42,29 @@ Papa.parse(DATA_FILE, {
         );
 
 
-
-        // -----------------------
-        // Load nodes
-        // -----------------------
-
         nodeResults.data.forEach((row) => {
-
 
             graph.addNode(
                 row.id,
                 {
-
                     x: Number(row.x),
-
                     y: Number(row.y),
-
                     size: Number(row.size),
-
-                    label:
-                        row.performer_name,
-
-                    color:
-                        "rgba(120,120,120,0.7)"
-
+                    label: row.performer_name,
+                    color: "rgba(120,120,120,0.7)"
                 }
             );
-
 
         });
 
 
-
-
-
-        // -----------------------
-        // Load edges
-        // -----------------------
 
         Papa.parse(EDGE_FILE, {
 
             download: true,
             header: true,
 
-
             complete: (edgeResults) => {
-
 
 
                 console.log(
@@ -89,13 +73,10 @@ Papa.parse(DATA_FILE, {
                 );
 
 
-
                 let skippedEdges = 0;
 
 
-
                 edgeResults.data.forEach((row) => {
-
 
 
                     if (
@@ -112,21 +93,16 @@ Papa.parse(DATA_FILE, {
                     }
 
 
-
                     graph.addEdge(
                         row.source,
                         row.target,
                         {
-
-                            weight:
-                                Number(row.weight)
-
+                            weight: Number(row.weight)
                         }
                     );
 
 
                 });
-
 
 
                 console.log(
@@ -135,21 +111,37 @@ Papa.parse(DATA_FILE, {
                 );
 
 
-
                 console.log(
                     "Graph:",
                     graph.order,
                     graph.size
                 );
 
+                Papa.parse(METADATA_FILE, {
+
+                    download: true,
+                    header: true,
+
+                    complete: (metadataResults) => {
 
 
+                        console.log(
+                            "Loaded metadata:",
+                            metadataResults.data.length
+                        );
 
 
+                        metadataResults.data.forEach(
+                            (row) => {
 
-                // -----------------------
-                // Sigma
-                // -----------------------
+                                performerMetadata[
+                                    row.performer_id
+                                ] = row;
+
+                            }
+                        );
+
+
 
                 const container =
                     document.getElementById(
@@ -157,121 +149,67 @@ Papa.parse(DATA_FILE, {
                     );
 
 
-
                 const sigma =
                     new Sigma(
                         graph,
                         container,
                         {
-
-                            renderLabels:
-                                false,
-
-                            defaultNodeColor:
-                                "#999999"
-
-
+                            renderLabels: false,
+                            defaultNodeColor: "#999999"
                         }
                     );
 
 
-
-
-
-
-
-                // -----------------------
-                // Node reducer
-                // -----------------------
 
                 sigma.setSetting(
                     "nodeReducer",
                     (node, data) => {
 
 
-
-                        // no selection
-
-                        if (
-                            !selectedNode
-                        ) {
+                        if (!selectedNode) {
 
                             return data;
 
                         }
 
 
-
-
-                        // collaborator-only mode
-
                         if (
-                            collaboratorsOnly
-                            &&
+                            collaboratorsOnly &&
                             !highlightedNodes.has(node)
                         ) {
 
                             return {
-
                                 ...data,
-
-                                hidden:
-                                    true
-
+                                hidden: true
                             };
 
                         }
 
 
-
-
-                        // selected performer
-
-                        if (
-                            node === selectedNode
-                        ) {
-
+                        if (node === selectedNode) {
 
                             return {
-
                                 ...data,
-
-                                color:
-                                    "#ffcc00",
-
-                                label:
-                                    data.label
-
+                                color: "#ffcc00",
+                                label: data.label
                             };
 
                         }
 
-
-
-
-
-                        // collaborators
 
                         if (
                             highlightedNodes.has(node)
                         ) {
 
-
                             return {
-
                                 ...data,
-
-                                color:
-                                    "#dddddd"
-
+                                color: "#dddddd"
                             };
 
                         }
 
 
-
                         return data;
-
 
 
                     }
@@ -279,49 +217,27 @@ Papa.parse(DATA_FILE, {
 
 
 
-
-
-
-
-
-                // -----------------------
-                // Edge reducer
-                // -----------------------
-
                 sigma.setSetting(
                     "edgeReducer",
                     (edge, data) => {
-
 
 
                         if (
                             highlightedEdges.has(edge)
                         ) {
 
-
                             return {
-
                                 ...data,
-
-                                hidden:
-                                    false,
-
-                                color:
-                                    "rgba(0, 0, 0, 0.7)"
-
+                                hidden: false,
+                                color: "rgba(0,0,0,0.7)"
                             };
 
                         }
 
 
-
                         return {
-
                             ...data,
-
-                            hidden:
-                                true
-
+                            hidden: true
                         };
 
 
@@ -330,56 +246,94 @@ Papa.parse(DATA_FILE, {
 
 
 
-
-
-
-
-                // -----------------------
-                // Search index
-                // -----------------------
-
-                const performerIndex = {};
-
+                const performerIndex = new Map();
+                const performerNames = [];
+                let fuse;
 
 
                 graph.forEachNode(
                     (node, attributes) => {
 
+                        const name =
+                            attributes.label;
 
-                        performerIndex[
-                            attributes.label
-                            .toLowerCase()
-                        ] = node;
 
+                        performerIndex.set(
+                            name.toLowerCase(),
+                            node
+                        );
+
+
+                        performerNames.push(name);
 
                     }
                 );
 
 
+                fuse = new Fuse(
+                    performerNames,
+                    {
+                        threshold: 0.3,
+                        includeScore: true
+                    }
+                );
 
 
+                function showPerformerPanel(metadata) {
 
-                // -----------------------
-                // Focus function
-                // -----------------------
+                    if (!metadata) {
+                        console.log("No metadata found");
+                        return;
+                    }
+
+                    document.getElementById("panel-name").textContent =
+                        metadata.performer_name;
+
+                    document.getElementById("panel-career").textContent =
+                        `${metadata.first_year}–${metadata.last_year}`;
+
+                    document.getElementById("panel-productions").textContent =
+                        metadata.production_count;
+
+                    document.getElementById("panel-collaborators").textContent =
+                        metadata.collaborator_count;    
+
+                    document
+                        .getElementById("performer-panel")
+                        .classList.remove("hidden");
+
+                }
+
+                function hidePerformerPanel() {
+
+                    document
+                        .getElementById("performer-panel")
+                        .classList
+                        .add("hidden");
+
+                }
 
                 function focusNode(node) {
 
 
                     selectedNode = node;
 
+                    document
+                    .getElementById(
+                        "searchInput"
+                    )
+                    .value =
+                        graph.getNodeAttribute(
+                            node,
+                            "label"
+                        );
 
-                    highlightedNodes =
-                        new Set();
+                    highlightedNodes = new Set();
 
-
-                    highlightedEdges =
-                        new Set();
-
+                    highlightedEdges = new Set();
 
 
                     highlightedNodes.add(node);
-
 
 
 
@@ -393,19 +347,13 @@ Papa.parse(DATA_FILE, {
                         ) => {
 
 
-
-                            highlightedEdges.add(
-                                edge
-                            );
+                            highlightedEdges.add(edge);
 
 
                             const otherNode =
                                 source === node
-                                ?
-                                target
-                                :
-                                source;
-
+                                ? target
+                                : source;
 
 
                             highlightedNodes.add(
@@ -417,14 +365,9 @@ Papa.parse(DATA_FILE, {
                     );
 
 
-
                     sigma.refresh();
 
-
-
-
-
-                    // move camera without zoom
+                    showPerformerPanel(node);
 
                     const displayData =
                         sigma.getNodeDisplayData(
@@ -434,99 +377,211 @@ Papa.parse(DATA_FILE, {
 
                     sigma.getCamera()
                         .animate(
-                        {
-
-                            x:
-                                displayData.x,
-
-                            y:
-                                displayData.y
-
-                        },
-                        {
-
-                            duration:
-                                1000
-
-                        }
-                    );
+                            {
+                                x: displayData.x,
+                                y: displayData.y
+                            },
+                            {
+                                duration: 1000
+                            }
+                        );
 
 
                 }
 
 
 
+                function findPerformer() {
+
+
+                    const query =
+                        document
+                        .getElementById(
+                            "searchInput"
+                        )
+                        .value
+                        .toLowerCase()
+                        .trim();
 
 
 
+                    const node =
+                        performerIndex.get(query);
 
 
-                // -----------------------
-                // Search
-                // -----------------------
 
-                document
-                    .getElementById(
+                    if (!node) {
+
+                        alert(
+                            "Performer not found"
+                        );
+
+                        return;
+
+                    }
+
+
+                    focusNode(node);
+
+
+                }
+
+
+
+                const searchButton =
+                    document.getElementById(
                         "searchButton"
-                    )
-                    .addEventListener(
-                        "click",
-                        () => {
+                    );
 
 
+                const searchInput =
+                    document.getElementById(
+                        "searchInput"
+                    );
 
-                            const query =
-                                document
-                                .getElementById(
-                                    "search"
-                                )
-                                .value
+
+                searchButton.addEventListener(
+                    "click",
+                    findPerformer
+                );
+
+
+                searchInput.addEventListener(
+                    "keydown",
+                    (event) => {
+
+                        if (
+                            event.key === "Enter"
+                        ) {
+
+                            findPerformer();
+
+                        }
+
+                    }
+                );
+
+                const suggestions =
+                    document.getElementById(
+                        "suggestions"
+                    );
+
+
+                searchInput.addEventListener(
+                    "input",
+                    () => {
+
+
+                        const query =
+                            searchInput.value
                                 .toLowerCase()
                                 .trim();
 
 
-
-                            const node =
-                                performerIndex[query];
+                        suggestions.innerHTML = "";
 
 
+                        if (!query) {
 
-                            if (!node) {
-
-                                alert(
-                                    "Performer not found"
-                                );
-
-                                return;
-
-                            }
-
-
-
-                            focusNode(node);
-
-
+                            return;
 
                         }
-                    );
+
+
+                        const matches =
+                            fuse.search(query)
+                                .map(result => result.item)
+                                .sort((a, b) => {
+
+
+                                    const aLower =
+                                        a.toLowerCase();
+
+                                    const bLower =
+                                        b.toLowerCase();
+
+
+                                    const aStarts =
+                                        aLower.startsWith(query);
+
+                                    const bStarts =
+                                        bLower.startsWith(query);
+
+
+                                    const aLast =
+                                        aLower
+                                        .split(" ")
+                                        .slice(1)
+                                        .some(
+                                            part =>
+                                            part.startsWith(query)
+                                        );
+
+
+                                    const bLast =
+                                        bLower
+                                        .split(" ")
+                                        .slice(1)
+                                        .some(
+                                            part =>
+                                            part.startsWith(query)
+                                        );
+
+
+                                    return (
+                                        bStarts - aStarts ||
+                                        bLast - aLast
+                                    );
+
+
+                                })
+                                .slice(0,50);
 
 
 
+                        matches.forEach(
+                            name => {
 
 
+                                const item =
+                                    document.createElement(
+                                        "div"
+                                    );
 
 
-
-                // -----------------------
-                // Click
-                // -----------------------
-
-                sigma.on(
-                    "clickNode",
-                    ({node}) => {
+                                item.className =
+                                    "suggestion-item";
 
 
-                        focusNode(node);
+                                item.textContent =
+                                    name;
+
+
+                                item.addEventListener(
+                                    "click",
+                                    () => {
+
+                                        searchInput.value =
+                                            name;
+
+
+                                        suggestions.innerHTML =
+                                            "";
+
+
+                                        findPerformer();
+
+                                    }
+                                );
+
+
+                                suggestions.appendChild(
+                                    item
+                                );
+
+
+                            }
+                        );
 
 
                     }
@@ -534,13 +589,20 @@ Papa.parse(DATA_FILE, {
 
 
 
+                sigma.on("clickNode", ({ node }) => {
+
+                    focusNode(node);
+
+                    const performerID = node.replace("A_", "");
+                    const metadata = performerMetadata[performerID];
+
+                    if (metadata) {
+                        showPerformerPanel(metadata);
+                    }
+
+                });
 
 
-
-
-                // -----------------------
-                // Toggle
-                // -----------------------
 
                 document
                     .getElementById(
@@ -550,26 +612,15 @@ Papa.parse(DATA_FILE, {
                         "change",
                         (event) => {
 
-
                             collaboratorsOnly =
                                 event.target.checked;
 
-
                             sigma.refresh();
-
 
                         }
                     );
 
 
-
-
-
-
-
-                // -----------------------
-                // Clear
-                // -----------------------
 
                 document
                     .getElementById(
@@ -580,22 +631,21 @@ Papa.parse(DATA_FILE, {
                         () => {
 
 
-
                             selectedNode = null;
-
 
                             highlightedNodes =
                                 new Set();
 
-
                             highlightedEdges =
                                 new Set();
 
+                            hidePerformerPanel();
 
+                            collaboratorsOnly = false;
 
-                            collaboratorsOnly =
-                                false;
-
+                            document
+                            .getElementById("searchInput")
+                            .value = "";
 
 
                             document
@@ -603,7 +653,6 @@ Papa.parse(DATA_FILE, {
                                 "collaboratorToggle"
                             )
                             .checked = false;
-
 
 
                             sigma.refresh();
@@ -614,6 +663,19 @@ Papa.parse(DATA_FILE, {
 
 
 
+                const loadingScreen =
+                    document.getElementById(
+                        "loading-screen"
+                    );
+
+
+                if (loadingScreen) {
+
+                    loadingScreen.classList.add(
+                        "hidden"
+                    );
+
+                }
 
 
                 console.log(
@@ -624,6 +686,10 @@ Papa.parse(DATA_FILE, {
             }
 
         });
+
+        }
+
+    });
 
 
     }

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Mapping the Broadway Network</title>
+    <link rel="stylesheet" href="/src/style.css">
+
+</head>
+
+
+<body>
+
+    <div id="loading-screen">
+
+        <div class="spinner"></div>
+
+        <p>
+            Loading network...
+        </p>
+
+    </div>
+
+    <div id="sidebar">
+
+        <h1>
+            Mapping the<br>
+            Broadway Network
+        </h1>
+
+        <div class="divider"></div>
+
+
+        <label>
+            Search performer:
+        </label>
+
+        <div class="search-container">
+
+            <input
+                id="searchInput"
+                placeholder="e.g Chita Rivera"
+            >
+
+            <div id="suggestions"></div>
+
+        </div>
+
+
+        <button id="searchButton">
+            Find performer
+        </button>
+
+
+        <button id="clearButton">
+            Clear selection
+        </button>
+
+
+        <div class="toggle">
+
+            <input
+                id="collaboratorToggle"
+                type="checkbox"
+            >
+
+            <label>
+                Show collaborators only
+            </label>
+
+        </div>
+
+
+        <div id="performer-panel" class="hidden">
+
+            <div class="divider"></div> 
+
+            <h2 id="panel-name">
+                Performer Name
+            </h2>
+
+            <div class="metadata">
+
+                <div class="metadata-row">
+                    <span class="metadata-label">
+                        Broadway career
+                    </span>
+
+                    <span id="panel-career"
+                        class="metadata-value">
+                    </span>
+                </div>
+
+
+                <div class="metadata-row">
+                    <span class="metadata-label">
+                        Productions
+                    </span>
+
+                    <span id="panel-productions"
+                        class="metadata-value">
+                    </span>
+                </div>
+
+
+                <div class="metadata-row">
+                    <span class="metadata-label">
+                        Collaborators
+                    </span>
+
+                    <span id="panel-collaborators"
+                        class="metadata-value">
+                    </span>
+                </div>
+
+            </div>
+
+        </div>
+
+        </div>
+
+    </div>
+
+    <div id="sigma-container"></div>
+
+
+    <script type="module" src="/src/main.js"></script>
+
+</body>
+
+</html>
